@@ -1,0 +1,36 @@
+# --- Terraform Core ---
+# Local terraform directory (contains providers and modules)
+.terraform/
+
+# Local state files (Since you're using S3, these should only exist temporarily)
+*.tfstate
+*.tfstate.*
+
+# Crash logs
+crash.log
+crash.*.log
+
+# --- Variables and Secrets ---
+# Ignore all variable files containing potential secrets
+*.tfvars
+*.tfvars.json
+
+# Ignore override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# --- CLI and Environment ---
+# Ignore CLI configuration files
+.terraformrc
+terraform.rc
+
+# --- Project Specifics ---
+# If you use a shell script to set AWS environment variables
+.env
+.aws_creds
+
+# --- OS Specific ---
+.DS_Store
+Thumbs.db
