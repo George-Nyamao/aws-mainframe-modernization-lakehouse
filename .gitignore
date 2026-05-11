@@ -34,3 +34,6 @@ terraform.rc
 # --- OS Specific ---
 .DS_Store
 Thumbs.db
+
+# --- Markdown files ---
+# Ignore markdown files that may contain documentation or notes
