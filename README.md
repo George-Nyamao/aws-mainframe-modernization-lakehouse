@@ -34,8 +34,8 @@ The solution implements a "Medallion Architecture" (Bronze/Silver/Gold) within A
 | **Week 1: Day 2** | **Zero-Trust Network Architecture** | Multi-AZ VPC, 2 Public / 2 Private Subnets, IGW, S3 Gateway Endpoint (`networking.tf`) | ✅ Completed |
 | **Week 1: Day 3** | **Data Lake Storage & Least-Privilege IAM** | Medallion S3 Bucket (Encryption, Versioning, FinOps Lifecycle Rules) + Scoped DMS & Glue IAM Roles (`storage.tf`, `iam.tf`) | ✅ Completed |
 | **Week 1: Day 4** | **Mainframe Source Simulation** | Private Multi-AZ RDS PostgreSQL 16 with Logical Replication (`rds.logical_replication = 1`) for CDC (`database.tf`) | ✅ Completed |
-| **Week 1: Day 5** | **Legacy Data Seeding** | Python/VPC Seeding Script (10,000 mock legacy transaction records) | 🔄 Next Up |
-| **Week 2: Days 6–8** | **DMS CDC Pipeline** | DMS Replication Instance, Source (RDS) & Target (S3 Parquet) Endpoints, Full Load + CDC Task | ⏳ Planned |
+| **Week 1: Day 5** | **Legacy Data Seeding** | Python/Docker + Serverless VPC Seeder for 10,000 mock legacy transaction records (`seeder.tf`, `scripts/seed_mainframe_data.py`) | ✅ Completed |
+| **Week 2: Days 6–8** | **DMS CDC Pipeline** | DMS Replication Instance, Source (RDS) & Target (S3 Parquet) Endpoints, Full Load + CDC Task | 🔄 Next Up |
 | **Week 2: Days 9–10** | **Migration & CDC Validation** | Initial Full Load execution & real-time CDC delta verification in S3 Raw (`raw/`) zone | ⏳ Planned |
 | **Week 3: Days 11–13** | **Apache Iceberg & Glue ETL** | Glue Catalog Iceberg tables, PySpark Upsert Job, EventBridge automation | ⏳ Planned |
 | **Week 3: Days 14–15** | **Governance & FinOps Teardown** | AWS Lake Formation Row-Level Security, Athena validation, `terraform destroy` compliance | ⏳ Planned |

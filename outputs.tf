@@ -32,3 +32,8 @@ output "rds_database_name" {
   description = "Database name of the simulated legacy mainframe RDS instance"
   value       = aws_db_instance.mainframe_source.db_name
 }
+
+output "seeder_lambda_name" {
+  description = "Name of the VPC Lambda function used to seed 10k rows (Day 5) and simulate CDC updates (Day 10)"
+  value       = aws_lambda_function.mainframe_seeder.function_name
+}
