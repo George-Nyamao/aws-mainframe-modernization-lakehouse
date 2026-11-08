@@ -1,6 +1,6 @@
 terraform {
   backend "s3" {
-    bucket  = "terraform-state-mainframe-mod-dev-8044"
+    bucket  = "terraform-state-mainframe-mod-dev-6812"
     key     = "dev/mainframe-modernization/terraform.tfstate"
     region  = "us-east-1"
     encrypt = true
