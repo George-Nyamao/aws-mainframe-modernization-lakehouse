@@ -52,6 +52,12 @@ variable "rds_multi_az" {
   default     = false
 }
 
+variable "dms_instance_class" {
+  description = "AWS DMS Replication Instance class (dms.t3.small is the minimum class on DMS Engine 3.5.x)."
+  type        = string
+  default     = "dms.t3.small"
+}
+
 locals {
   tags = {
     Project     = var.project_name

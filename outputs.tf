@@ -37,3 +37,13 @@ output "seeder_lambda_name" {
   description = "Name of the VPC Lambda function used to seed 10k rows (Day 5) and simulate CDC updates (Day 10)"
   value       = aws_lambda_function.mainframe_seeder.function_name
 }
+
+output "dms_replication_instance_id" {
+  description = "ID of the AWS DMS Replication Instance"
+  value       = aws_dms_replication_instance.mainframe_cdc.replication_instance_id
+}
+
+output "dms_replication_task_arn" {
+  description = "ARN of the AWS DMS Full Load + CDC Replication Task"
+  value       = aws_dms_replication_task.mainframe_cdc.replication_task_arn
+}
