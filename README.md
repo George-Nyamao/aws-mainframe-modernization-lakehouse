@@ -37,8 +37,8 @@ The solution implements a "Medallion Architecture" (Bronze/Silver/Gold) within A
 | **Week 1: Day 5** | **Legacy Data Seeding** | Python/Docker + Serverless VPC Seeder for 10,000 mock legacy transaction records (`seeder.tf`, `scripts/seed_mainframe_data.py`) | ✅ Completed |
 | **Week 2: Days 6–8** | **DMS CDC Pipeline** | DMS Replication Instance, Source (RDS) & Target (S3 Parquet) Endpoints, Full Load + CDC Task (`dms.tf`) | ✅ Completed |
 | **Week 2: Days 9–10** | **Migration & CDC Validation** | Initial Full Load (`LOAD00000001.parquet`) & real-time CDC delta (`20261110-092300883.parquet`) verified in S3 `raw/` zone | ✅ Completed |
-| **Week 3: Days 11–13** | **Apache Iceberg & Glue ETL** | Glue Catalog Iceberg tables, PySpark Upsert Job, EventBridge automation | 🔄 Next Up |
-| **Week 3: Days 14–15** | **Governance & FinOps Teardown** | AWS Lake Formation Row-Level Security, Athena validation, `terraform destroy` compliance | ⏳ Planned |
+| **Week 3: Days 11–13** | **Apache Iceberg & Glue ETL** | Glue Catalog Iceberg database, Athena Workgroup, PySpark 4.0 `MERGE INTO` Upsert Job, S3 -> EventBridge -> Glue Workflow (`lakehouse.tf`, `automation.tf`, `scripts/glue_iceberg_upsert.py`) | ✅ Completed |
+| **Week 3: Days 14–15** | **Governance & FinOps Teardown** | AWS Lake Formation Row-Level Security, Athena validation, `terraform destroy` compliance | 🔄 Next Up |
 
 ---
 

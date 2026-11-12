@@ -47,3 +47,18 @@ output "dms_replication_task_arn" {
   description = "ARN of the AWS DMS Full Load + CDC Replication Task"
   value       = aws_dms_replication_task.mainframe_cdc.replication_task_arn
 }
+
+output "glue_database_name" {
+  description = "Name of the AWS Glue Data Catalog database for Apache Iceberg tables"
+  value       = aws_glue_catalog_database.lakehouse.name
+}
+
+output "iceberg_upsert_lambda_name" {
+  description = "Name of the Serverless Apache Iceberg ACID MERGE Upsert Orchestrator"
+  value       = aws_lambda_function.iceberg_upsert_orchestrator.function_name
+}
+
+output "athena_workgroup_name" {
+  description = "Name of the Amazon Athena Workgroup for querying Iceberg tables"
+  value       = aws_athena_workgroup.lakehouse.name
+}

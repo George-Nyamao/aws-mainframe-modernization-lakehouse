@@ -128,10 +128,11 @@ data "aws_iam_policy_document" "glue_datalake_least_privilege" {
       "s3:ListMultipartUploadParts"
     ]
     resources = [
-      "${aws_s3_bucket.datalake.arn}/iceberg/*",
+      "${aws_s3_bucket.datalake.arn}/iceberg*",
       "${aws_s3_bucket.datalake.arn}/silver/*",
       "${aws_s3_bucket.datalake.arn}/gold/*",
-      "${aws_s3_bucket.datalake.arn}/temp/*"
+      "${aws_s3_bucket.datalake.arn}/temp/*",
+      "${aws_s3_bucket.datalake.arn}/athena-results/*"
     ]
   }
 }

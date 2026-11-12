@@ -58,6 +58,12 @@ variable "dms_instance_class" {
   default     = "dms.t3.small"
 }
 
+variable "enable_glue_spark_job" {
+  description = "Provision dedicated AWS Glue Spark DPU job (set false on new AWS accounts where Glue CreateJob is account-gated; serverless Athena Iceberg MERGE INTO runs by default)."
+  type        = bool
+  default     = false
+}
+
 locals {
   tags = {
     Project     = var.project_name
