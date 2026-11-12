@@ -12,6 +12,8 @@ As a Lead-level demonstration, this project moves beyond "Lift and Shift" to sho
 ---
 
 ## 🏗 Architecture
+> 📄 **Deep-Dive Technical Blueprint & Diagrams:** See [**ARCHITECTURE.md**](./ARCHITECTURE.md) for the full Mermaid system schematic, ASCII network topology, sequence diagrams, data model mapping, and FinOps cost analysis.
+
 The solution implements a "Medallion Architecture" (Bronze/Silver/Gold) within AWS:
 
 1.  **Ingestion (CDC):** AWS DMS captures real-time WAL changes from a private legacy source (`RDS PostgreSQL 16`) and lands them in S3 (`raw/`) as Apache Parquet v2.0.
