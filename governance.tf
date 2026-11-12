@@ -25,9 +25,11 @@ resource "aws_lakeformation_data_lake_settings" "main" {
 }
 
 # 2. Register the S3 Iceberg Warehouse Path with AWS Lake Formation
+# Uses explicit IAM role (`role_arn`) instead of `use_service_linked_role = true`
+# so `terraform destroy` can deregister the last S3 location without AWS SLR lock errors
 resource "aws_lakeformation_resource" "datalake_iceberg" {
-  arn                     = "${aws_s3_bucket.datalake.arn}/iceberg"
-  use_service_linked_role = true
+  arn      = "${aws_s3_bucket.datalake.arn}/iceberg"
+  role_arn = aws_iam_role.glue_etl.arn
 
   depends_on = [
     aws_lakeformation_data_lake_settings.main
