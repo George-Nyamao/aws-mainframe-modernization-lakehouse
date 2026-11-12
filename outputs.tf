@@ -62,3 +62,8 @@ output "athena_workgroup_name" {
   description = "Name of the Amazon Athena Workgroup for querying Iceberg tables"
   value       = aws_athena_workgroup.lakehouse.name
 }
+
+output "us_east_analyst_role_arn" {
+  description = "ARN of the Regional Analyst IAM Role governed by Lake Formation Row-Level Security & PII Masking"
+  value       = aws_iam_role.us_east_analyst.arn
+}
