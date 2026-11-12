@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """
-Day 15: Cross-Role Athena Validation for AWS Lake Formation Row-Level Security (RLS) & PII Masking.
+Day 15: Zero-Dependency Cross-Role Athena Validator for AWS Lake Formation RLS & PII Masking.
+
+Uses the local AWS CLI via Python's standard library (`subprocess` + `json`) so no external
+pip packages (`boto3`) are required in WSL.
 
 Compares Athena query results on `legacy_transactions_iceberg` between:
 1. Data Lake Admin Identity (sees all 4 regions = 10,010 rows + `customer_ssn` PII column)
@@ -11,26 +14,56 @@ Compares Athena query results on `legacy_transactions_iceberg` between:
 from __future__ import annotations
 
 import json
+import os
+import subprocess
 import time
 from typing import Any
-import boto3
+
+
+def aws_cli_json(args: list[str], env_overrides: dict[str, str] | None = None) -> dict[str, Any]:
+    """Executes an AWS CLI command and parses its JSON output using only the Python stdlib."""
+    env = os.environ.copy()
+    if env_overrides:
+        env.update(env_overrides)
+
+    cmd = ["aws", *args, "--output", "json"]
+    proc = subprocess.run(cmd, env=env, capture_output=True, text=True)
+    if proc.returncode != 0:
+        raise RuntimeError(proc.stderr.strip() or f"Command failed: {' '.join(cmd)}")
+    return json.loads(proc.stdout) if proc.stdout.strip() else {}
 
 
 def execute_athena_and_fetch(
-    athena_client: Any,
     sql: str,
     database: str,
     workgroup: str,
+    region: str = "us-east-1",
+    env_overrides: dict[str, str] | None = None,
 ) -> tuple[list[str], list[list[str]]]:
-    resp = athena_client.start_query_execution(
-        QueryString=sql,
-        QueryExecutionContext={"Database": database},
-        WorkGroup=workgroup,
+    """Starts an Athena SQL query via AWS CLI and returns (column_names, data_rows)."""
+    start_resp = aws_cli_json(
+        [
+            "athena",
+            "start-query-execution",
+            "--query-string",
+            sql,
+            "--query-execution-context",
+            f"Database={database}",
+            "--work-group",
+            workgroup,
+            "--region",
+            region,
+        ],
+        env_overrides=env_overrides,
     )
-    qid = resp["QueryExecutionId"]
+    qid = start_resp["QueryExecutionId"]
 
     while True:
-        status = athena_client.get_query_execution(QueryExecutionId=qid)["QueryExecution"]["Status"]
+        exec_resp = aws_cli_json(
+            ["athena", "get-query-execution", "--query-execution-id", qid, "--region", region],
+            env_overrides=env_overrides,
+        )
+        status = exec_resp["QueryExecution"]["Status"]
         state = status["State"]
         if state == "SUCCEEDED":
             break
@@ -38,7 +71,10 @@ def execute_athena_and_fetch(
             raise RuntimeError(status.get("StateChangeReason", "Query failed"))
         time.sleep(1.0)
 
-    res = athena_client.get_query_results(QueryExecutionId=qid)["ResultSet"]
+    res = aws_cli_json(
+        ["athena", "get-query-results", "--query-execution-id", qid, "--region", region],
+        env_overrides=env_overrides,
+    )["ResultSet"]
     rows = res.get("Rows", [])
     if not rows:
         return [], []
@@ -53,68 +89,78 @@ def main() -> None:
     table = "legacy_transactions_iceberg"
     workgroup = "mainframe-modernization-athena-wg-dev"
 
-    sts = boto3.client("sts", region_name=region)
-    account_id = sts.get_caller_identity()["Account"]
+    identity = aws_cli_json(["sts", "get-caller-identity", "--region", region])
+    account_id = identity["Account"]
     analyst_role_arn = f"arn:aws:iam::{account_id}:role/mainframe-modernization-us-east-analyst-dev"
 
     # 1. Query as Lakehouse Admin
-    admin_athena = boto3.client("athena", region_name=region)
     _, admin_regions = execute_athena_and_fetch(
-        admin_athena,
         f"SELECT region, COUNT(*) AS cnt FROM {database}.{table} GROUP BY region ORDER BY region",
         database,
         workgroup,
+        region,
     )
     admin_cols, _ = execute_athena_and_fetch(
-        admin_athena,
         f"SELECT * FROM {database}.{table} LIMIT 1",
         database,
         workgroup,
+        region,
     )
 
     # 2. Assume the Regional Analyst Role & Query via Lake Formation Data Cells Filter
-    assumed = sts.assume_role(
-        RoleArn=analyst_role_arn,
-        RoleSessionName="LakeFormationRLSValidation",
+    assumed = aws_cli_json(
+        [
+            "sts",
+            "assume-role",
+            "--role-arn",
+            analyst_role_arn,
+            "--role-session-name",
+            "LakeFormationRLSValidation",
+            "--region",
+            region,
+        ]
     )["Credentials"]
 
-    analyst_athena = boto3.client(
-        "athena",
-        region_name=region,
-        aws_access_key_id=assumed["AccessKeyId"],
-        aws_secret_access_key=assumed["SecretAccessKey"],
-        aws_session_token=assumed["SessionToken"],
-    )
+    analyst_env = {
+        "AWS_ACCESS_KEY_ID": assumed["AccessKeyId"],
+        "AWS_SECRET_ACCESS_KEY": assumed["SecretAccessKey"],
+        "AWS_SESSION_TOKEN": assumed["SessionToken"],
+    }
 
     _, analyst_regions = execute_athena_and_fetch(
-        analyst_athena,
         f"SELECT region, COUNT(*) AS cnt FROM {database}.{table} GROUP BY region ORDER BY region",
         database,
         workgroup,
+        region,
+        env_overrides=analyst_env,
     )
     analyst_cols, _ = execute_athena_and_fetch(
-        analyst_athena,
         f"SELECT * FROM {database}.{table} LIMIT 1",
         database,
         workgroup,
+        region,
+        env_overrides=analyst_env,
     )
 
-    # 3. Verify explicit PII column query is blocked for Analyst
+    # 3. Verify explicit PII column query (`SELECT customer_ssn`) is blocked for Analyst
     pii_blocked = False
     pii_error_message = ""
     try:
         execute_athena_and_fetch(
-            analyst_athena,
             f"SELECT customer_ssn FROM {database}.{table} LIMIT 1",
             database,
             workgroup,
+            region,
+            env_overrides=analyst_env,
         )
     except Exception as exc:
         pii_blocked = True
         pii_error_message = str(exc)
 
     report = {
-        "status": "PASSED" if (len(analyst_regions) == 1 and "customer_ssn" not in analyst_cols and pii_blocked) else "CHECK",
+        "status": "PASSED"
+        if (len(analyst_regions) == 1 and "customer_ssn" not in analyst_cols and pii_blocked)
+        else "CHECK",
         "admin_view": {
             "visible_regions": {r[0]: int(r[1]) for r in admin_regions},
             "total_rows": sum(int(r[1]) for r in admin_regions),

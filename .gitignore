@@ -32,6 +32,10 @@ terraform.rc
 .aws_creds
 *_output.json
 
+# --- Python Cache ---
+__pycache__/
+*.py[cod]
+
 # --- OS Specific ---
 .DS_Store
 Thumbs.db
